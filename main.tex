@@ -79,8 +79,87 @@
 %  \tableofcontents
 %\end{frame}
 
-\begin{frame}{Stuff}
+\begin{frame}{Motivation}
+\vspace{0.25 cm}
+In a physics analysis using Spark {\small (Oliver Gutsche, Matteo Cremonesi, Cristina Mantilla)}, the first step is data access.
 
+\vspace{0.25 cm}
+Hard to cross the boundary between ROOT's C++ runtime and Spark's Java Virtual Machine (JVM).
+
+\vspace{0.25 cm}
+\begin{uncoverenv}<2->
+\textcolor{darkblue}{Four methods considered:}
+\begin{enumerate}
+\item Convert all data from ROOT to another format (Avro).
+\item Access ROOT inside the JVM via JNI.
+\item Access ROOT as an external process (pipe or socket).
+\item Run PyROOT in PySpark.
+\end{enumerate}
+\end{uncoverenv}
+
+\vspace{0.25 cm}
+\begin{uncoverenv}<3->
+The 2016 analysis used option \textcolor{darkblue}{\#1}, but it's not ideal.
+\begin{itemize}
+\item Separate conversion step before running Spark.
+\item Two copies of the data: extra version control and disk usage.
+\end{itemize}
+\end{uncoverenv}
 \end{frame}
+
+\begin{frame}{Previously rejected solution}
+\vspace{0.25 cm}
+\begin{center}
+\includegraphics[width=0.9\linewidth]{rootio-screenshot.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Previously rejected solution}
+\vspace{0.35 cm}
+\begin{block}{FreeHEP ROOTIO \scriptsize (\textcolor{blue}{\url{http://java.freehep.org/freehep-rootio/}})}
+\vspace{-0.1 cm}
+\begin{itemize}
+\item Re-implementation of ROOT's I/O in Java.
+\item Used as a backend in Java Analysis Studio (JAS).
+\item First talks by Tony Johnson in 2001, commits trail off $\sim$2010.
+\end{itemize}
+\end{block}
+
+\vspace{-0.25 cm}
+\begin{uncoverenv}<2->
+\begin{block}{Why not?}
+\vspace{-0.1 cm}
+\begin{itemize}
+\item Lack of documentation; high-level interface described on website no longer exists.
+\item Immediately failed when presented with recent ROOT file.
+\item Can't get in touch with Tony Johnson.
+\end{itemize}
+\end{block}
+\end{uncoverenv}
+
+\vspace{-0.25 cm}
+\begin{uncoverenv}<3->
+\begin{block}{Why now?}
+\vspace{-0.1 cm}
+\begin{itemize}
+\item I reexamined its low-level interface (direct access to TBranches/TBaskets), and it works!
+\item Only 3 minor bug-fixes needed to read complex CMS AOD.
+\end{itemize}
+\end{block}
+\end{uncoverenv}
+\end{frame}
+
+\begin{frame}{}
+\begin{block}{Advantages of a pure-Java reader}
+\begin{itemize}
+\item No intermediate files: can copy ROOT files directly into HDFS and use them.
+\item 
+
+
+\end{itemize}
+\end{block}
+\end{frame}
+
+
 
 \end{document}
