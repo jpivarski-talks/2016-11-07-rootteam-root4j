@@ -289,6 +289,7 @@ val h2 = df.histogrammar(Bin(100, 0.0, 20.0, $"met"))
 \end{frame}
 
 \begin{frame}[fragile]{ROOT $\to$ DataFrame features}
+\vspace{0.5 cm}
 \begin{itemize}\setlength{\itemsep}{0.25 cm}
 \item SparkSQL examines user's query, optimizes a work plan, and provides data source with the following information:
 \begin{itemize}
@@ -299,14 +300,62 @@ val h2 = df.histogrammar(Bin(100, 0.0, 20.0, $"met"))
 \item Matches perfectly with ROOT's columnar layout: only read pruned branches and execute filter at the source.
 
 \item Since root4j can write (untested) we should also implement 
-\begin{verbatim}spark.sqlContext.save.root("filename.root")
+\begin{verbatim}
+spark.sqlContext.save.root("filename.root")
 \end{verbatim}
 to share results back to C++ ROOT.
 \end{itemize}
+
+\begin{uncoverenv}<2->
+\begin{center}
+\Large Viktor Khristenko (U.\ Iowa Ph.D.\ student) is developing it with guidance from me.
+\end{center}
+\end{uncoverenv}
+\end{frame}
+
+\begin{frame}[fragile]{Performance?}
+\vspace{0.5 cm}
+{\Large \textcolor{darkblue}{Not terrible.} \normalsize After a dynamic optimization phase, Java is about a factor of 2 slower than C++.}
+
+\small
+\begin{verbatim}
+Java results         | C++ results
+---------------------+---------------------
+426.613 ns/item      | 94.64 ns/item
+180.566 ns/item      | 80.58 ns/item
+192.151 ns/item      | 79.61 ns/item
+179.391 ns/item      | 81.68 ns/item
+198.364 ns/item      | 91.34 ns/item
+184.718 ns/item      | 79.93 ns/item
+182.119 ns/item      | 81.5 ns/item
+134.779 ns/item      | 81.39 ns/item
+checksum (good)      | checksum (good)
+---------------------+---------------------
+==> 15-25 MB/sec     | ==> 40 MB/sec
+\end{verbatim}
+
+\normalsize
+\vspace{0.25 cm}
+Thanks to Philippe for help writing apples-to-apples C++ code.
 \end{frame}
 
 %% Ignoring the Java startup phase (training HotSpot optimizations), the Java time is 130-200 ns/item and C++ is 80 ns/item.
 %% Compression on this branch is 1.09, so Java is 15-25 MB/second and C++ is 40 MB/second.
 %% Java is 1.6 to 2 times slower than C++. That makes sense; typical of Java/C++ performance on the benchmarks game.
+
+\begin{frame}{Next steps}
+\begin{itemize}\setlength{\itemsep}{0.5 cm}
+\item Viktor Khristenko and I are developing a roadmap.
+\begin{itemize}
+\item We have work-items and are determining reasonable time estimates.
+\end{itemize}
+
+\item This should someday be a feature of the CERN Spark cluster and SWAN.
+\begin{itemize}
+\item Need to coordinate with Luca Canali, Kacper Surdy, Katarzyna Dziedziniewicz-Wojcik and Danilo and Enric.
+\end{itemize}
+
+\end{itemize}
+\end{frame}
 
 \end{document}
