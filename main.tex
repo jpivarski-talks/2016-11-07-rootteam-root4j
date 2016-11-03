@@ -152,22 +152,22 @@ The 2016 analysis used option \textcolor{darkblue}{\#1}, but it's not ideal.
 
 \begin{frame}{Why this is a good solution}
 \vspace{0.3 cm}
-\begin{block}{Reading ROOT files with pure Java code}
+\begin{block}{Advantage of pure Java code:}
 \begin{itemize}
 \item No intermediate files: version control and extra disk space.
 \item No attempt to run two large projects (ROOT and Java) in the same process, which caused hard-to-trace segmentation faults.
-\item No passing data through a serialized stream (both solutions \textcolor{darkblue}{\#3} and \textcolor{darkblue}{\#4} on the first page).
+\item No passing of data through a serialized stream (both solutions \textcolor{darkblue}{\#3} and \textcolor{darkblue}{\#4} on the first page).
 \end{itemize}
 \end{block}
 
 \vspace{-0.5 cm}
 \begin{uncoverenv}<2->
-\begin{block}{This particular codebase\vspace{-0.5 cm}}
+\begin{block}{Advantage of this particular code:\vspace{-0.5 cm}}
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{p{0.85\linewidth} c}
 & verified? \\\hline
-Can read complex structures out of TBasket. & $\surd$ \\
-Only small corrections are likely. & $\surd$ \\
+Can read complex structures (directly via TBaskets). & $\surd$ \\
+Only small corrections are likely. & $\sim$ \\
 Well-organized; class/method names mirror ROOT. & $\surd$ \\
 JIT-compiles streamers, rather than generic functions. & $\surd$ \\
 Can write objects to ROOT files as well. & \\
@@ -177,7 +177,7 @@ Has an embedded XRootD client (HDFS and EOS!). & \\
 \end{uncoverenv}
 \end{frame}
 
-\begin{frame}[fragile]{Project: expose ROOT format to Spark}
+\begin{frame}[fragile]{Project: expose ROOT format in Spark}
 \vspace{0.5 cm}
 \begin{columns}[t]
 \column{0.5\linewidth}
@@ -213,7 +213,7 @@ spark-shell --packages \
 \end{minted}
 
 \normalsize
-(Spark fetches JAR with dependencies from Maven Central.)
+(Spark fetches JAR and its dependencies from Maven Central.)
 \end{uncoverenv}
 \end{frame}
 
@@ -225,7 +225,7 @@ import org.dianahep.sparkroot._
 val df = spark.sqlContext.read.root(
              "hdfs://path/to/files/*.root")
 
-df.printSchema
+df.printSchema()
 \end{minted}
 \begin{verbatim}
 root
@@ -246,7 +246,7 @@ root
 \begin{frame}[fragile]{Example session}
 \small
 \begin{verbatim}
-df.show
+df.show()
 +---------+--------------------+--------------------+
 |      met|               muons|                jets|
 +---------+--------------------+--------------------+
@@ -269,9 +269,7 @@ only showing top 10 rows
 \small
 \begin{minted}{scala}
 case class LorentzVector(pt: Float, eta: Float)
-case class Event(met: Float,
-                 muons: Seq[LorentzVector],
-                 jets: Seq[LorentzVector])
+case class Event(met: Float, muons: Seq[LorentzVector])
 
 val rdd = df.as[Event]   // OOP-style interface
 
@@ -286,6 +284,14 @@ val h1 = rdd.aggregate(
 // DataFrame plotting
 val h2 = df.histogrammar(Bin(100, 0.0, 20.0, $"met"))
 \end{minted}
+
+\begin{uncoverenv}<2->
+\textcolor{darkblue}{\large In Python/PySpark,}
+\begin{itemize}
+\item SQL-style access to DataFrames are as performant as Scala.
+\item OOP-style access isn't (but class declaration isn't necessary).
+\end{itemize}
+\end{uncoverenv}
 \end{frame}
 
 \begin{frame}[fragile]{ROOT $\to$ DataFrame features}
@@ -297,7 +303,10 @@ val h2 = df.histogrammar(Bin(100, 0.0, 20.0, $"met"))
 \item conservative cuts to use as a prefilter (``filtering'').
 \end{itemize}
 
-\item Matches perfectly with ROOT's columnar layout: only read pruned branches and execute filter at the source.
+\item Matches well with ROOT's layout: can read just the pruned branches and execute the filter at the source.
+
+\vspace{0.25 cm}
+Compare to Parquet, the leading columnar format for big data.
 
 \item Since root4j can write (untested) we should also implement 
 \begin{verbatim}
@@ -315,9 +324,14 @@ to share results back to C++ ROOT.
 
 \begin{frame}[fragile]{Performance?}
 \vspace{0.5 cm}
-{\Large \textcolor{darkblue}{Not terrible.} \normalsize After a dynamic optimization phase, Java is about a factor of 2 slower than C++.}
+{\Large \textcolor{darkblue}{Not terrible.} \normalsize After a dynamic optimization phase, Java is about a factor of 2.3 slower than C++.}
 
+\vspace{0.25 cm}
 \small
+Reading one nested branch ($\chi^2$ of all tracks per event), see
+
+\textcolor{blue}{\tiny \url{https://gist.github.com/jpivarski/e8b9da99152bccf70ba187cdab149563}}
+
 \begin{verbatim}
 Java results         | C++ results
 ---------------------+---------------------
@@ -329,13 +343,11 @@ Java results         | C++ results
 184.718 ns/item      | 79.93 ns/item
 182.119 ns/item      | 81.5 ns/item
 134.779 ns/item      | 81.39 ns/item
-checksum (good)      | checksum (good)
 ---------------------+---------------------
 ==> 15-25 MB/sec     | ==> 40 MB/sec
 \end{verbatim}
 
 \normalsize
-\vspace{0.25 cm}
 Thanks to Philippe for help writing apples-to-apples C++ code.
 \end{frame}
 
@@ -344,10 +356,13 @@ Thanks to Philippe for help writing apples-to-apples C++ code.
 %% Java is 1.6 to 2 times slower than C++. That makes sense; typical of Java/C++ performance on the benchmarks game.
 
 \begin{frame}{Next steps}
+\large
 \begin{itemize}\setlength{\itemsep}{0.5 cm}
 \item Viktor Khristenko and I are developing a roadmap.
 \begin{itemize}
 \item We have work-items and are determining reasonable time estimates.
+\item \textcolor{blue}{\url{https://github.com/diana-hep/root4j}}
+\item \textcolor{blue}{\url{https://github.com/diana-hep/spark-root}}
 \end{itemize}
 
 \item This should someday be a feature of the CERN Spark cluster and SWAN.
