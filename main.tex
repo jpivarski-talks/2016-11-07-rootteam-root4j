@@ -288,8 +288,21 @@ val h2 = df.histogrammar(Bin(100, 0.0, 20.0, $"met"))
 \end{minted}
 \end{frame}
 
-\begin{frame}{}
+\begin{frame}[fragile]{ROOT $\to$ DataFrame features}
+\begin{itemize}\setlength{\itemsep}{0.25 cm}
+\item SparkSQL examines user's query, optimizes a work plan, and provides data source with the following information:
+\begin{itemize}
+\item which fields are required (``pruning'');
+\item conservative cuts to use as a prefilter (``filtering'').
+\end{itemize}
 
+\item Matches perfectly with ROOT's columnar layout: only read pruned branches and execute filter at the source.
+
+\item Since root4j can write (untested) we should also implement 
+\begin{verbatim}spark.sqlContext.save.root("filename.root")
+\end{verbatim}
+to share results back to C++ ROOT.
+\end{itemize}
 \end{frame}
 
 %% Ignoring the Java startup phase (training HotSpot optimizations), the Java time is 130-200 ns/item and C++ is 80 ns/item.
