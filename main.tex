@@ -322,7 +322,7 @@ to share results back to C++ ROOT.
 \end{uncoverenv}
 \end{frame}
 
-\begin{frame}[fragile]{Performance?}
+\begin{frame}{Performance?}
 \vspace{0.5 cm}
 {\Large \textcolor{darkblue}{Not terrible.} \normalsize After a dynamic optimization phase, Java is about a factor of 2.3 slower than C++.}
 
@@ -332,20 +332,7 @@ Reading one nested branch ($\chi^2$ of all tracks per event), see
 
 \textcolor{blue}{\tiny \url{https://gist.github.com/jpivarski/e8b9da99152bccf70ba187cdab149563}}
 
-\begin{verbatim}
-Java results         | C++ results
----------------------+---------------------
-426.613 ns/item      | 94.64 ns/item
-180.566 ns/item      | 80.58 ns/item
-192.151 ns/item      | 79.61 ns/item
-179.391 ns/item      | 81.68 ns/item
-198.364 ns/item      | 91.34 ns/item
-184.718 ns/item      | 79.93 ns/item
-182.119 ns/item      | 81.5 ns/item
-134.779 ns/item      | 81.39 ns/item
----------------------+---------------------
-==> 15-25 MB/sec     | ==> 40 MB/sec
-\end{verbatim}
+\includegraphics[width=\linewidth]{performance.pdf}
 
 \normalsize
 Thanks to Philippe for help writing apples-to-apples C++ code.
